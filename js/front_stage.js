@@ -16,6 +16,7 @@ function getProductList() {
             renderProductList(productList);
         })
         .catch(function (error) {
+            // api_path 已經寫死，下面這行不會觸發
             console.log(error.response.message);
         });
 }
@@ -212,15 +213,12 @@ productWrap.addEventListener("click", function (e) {
                     productQuantity = item.quantity + 1;
                 }
             })
-
-            //productQuantity = quantity + 1;
             let productObj = {
                 "data": {
                     "productId": productId,
                     "quantity": productQuantity
                 }
             }
-            //addCartList(productObj);
             addCartList(productObj);
         });
 
@@ -235,6 +233,7 @@ function addCartList(productObj) {
             renderCartList(response);
         })
         .catch(function (error) {
+            //數量不會小於1，下面訊息不會被觸發
             console.log(error.response.message);
         });
 }
@@ -267,6 +266,7 @@ function deleteAllCartItems() {
             renderCartList(response);
         })
         .catch(function (error) {
+            // 前述邏輯擋掉購物車是空的還戳API的可能性，下面這一行應當不會觸發
             console.log(error.response.message);
         });
 }
