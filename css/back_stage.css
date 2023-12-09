@@ -808,3 +808,42 @@ body {
   display: none;
 }
 /*# sourceMappingURL=all.css.map */
+
+
+
+/* --------------- 自訂 class ---------------*/
+.d-flex{
+  display: flex;
+}
+.justify-content-between{
+  justify-content: space-around;
+}
+.grid-6{
+  width: 50%;
+}
+.py-16px{
+  padding: 16px 0px;
+}
+
+@media(max-width: 767px){
+  .flex-column-md{
+    flex-direction: column;
+  }
+  .grid-md-12{
+    width: 100%;
+  }
+}
+
+.to-front{
+  padding: 16px 0;
+  font-size: 16px;
+  color: black;
+  background-color:#c9c2d9; 
+  display: block; 
+  text-align:center; 
+  text-decoration: none;
+}
+.to-front:hover{
+  color: white;
+  background-color: #301E5F;
+}

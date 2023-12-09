@@ -204,7 +204,7 @@ body {
 
 .banner {
   position: relative;
-  background-image: url("asset/img/3ewLAKn.png");
+  /* background-image: url("asset/img/3ewLAKn.png"); */
   background-position: center center;
   background-repeat: no-repeat;
   background-size: cover;
@@ -834,3 +834,20 @@ body {
   display: none;
 }
 /*# sourceMappingURL=all.css.map */
+
+
+
+/* =============================================== */
+.to-back{
+  padding: 16px 0;
+  font-size: 16px;
+  color: black;
+  background-color:#c9c2d9; 
+  display: block; 
+  text-align:center; 
+  text-decoration: none;
+}
+.to-back:hover{
+  color: white;
+  background-color: #301E5F;
+}

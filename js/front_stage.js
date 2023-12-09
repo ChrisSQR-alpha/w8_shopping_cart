@@ -69,8 +69,22 @@ productSelect.addEventListener("change", function (e) {
 
 
 //取得購物車列表
+function getCartList() {
+    axios
+        .get(
+            `${url}/carts`
+        )
+        .then(function (response) {
+            renderCartList(response);
+        });
+}
+getCartList();
+
 function renderCartList(response) {
     shoppingCartList = response.data;
+    if(shoppingCartList.status == false){
+        
+    }
     //console.log(shoppingCartList);
     //處理表頭
     let str = `
@@ -81,38 +95,69 @@ function renderCartList(response) {
                   <th width="15%">金額</th>
                   <th width="15%"></th>
               </tr>`;
-    // 處理表尾
-    let totalPrice = 0;
+    let totalPrice = 0; //總金額
     let shoppingCartTable = document.querySelector(".shoppingCart-table"); //DOM
-    response.data.carts.forEach(function (item) {
-        let numeralPrice = numeral(item.product.price);
-        let priceStr = numeralPrice.format("$0,0");
-        let subTotalPrice = (item.product.price) * item.quantity;
-        let numeralSubTotalPrice = numeral(subTotalPrice);
-        let subTotalPriceStr = numeralSubTotalPrice.format("$0,0");
-        let cartId = item.id;
-        //處理單身：組字串給 innerHTML
+
+    // 可能受到回傳訊息的影響，伺服器端購物車狀態為 false 的時候，要在客戶端建立一個模型讓狀態處理順利進行
+    if(shoppingCartList.status == false){
+        shoppingCartList = {
+            carts:[],
+            finalTotal:0,
+            status: true,
+            total: 0
+        }
+    }
+    // 狀態處理：購物車沒有東西
+    if ((shoppingCartList == undefined) || shoppingCartList.carts.length == 0) {
         let li = `
                  <tr>
                      <td>
                          <div class="cardItem-title">
-                             <img src="${item.product.images}" alt="">
-                             <p>${item.product.title}</p>
+                             <img src="" alt="">
+                             <p>沒有商品</p>
                          </div>
                      </td>
-                     <td>NT${priceStr}</td>
-                     <td>${item.quantity}</td>
-                     <td>NT${subTotalPriceStr}</td>
+                     <td>NT$0</td>
+                     <td>0</td>
+                     <td>NT$0</td>
                      <td class="discardBtn">
-                         <a href="#shoppingCart" class="material-icons" cart-id="${cartId}">
-                             clear
-                         </a>
+                         
                      </td>
                  </tr>`;
         str += li;
-        //處理總價
-        totalPrice += (item.product.price) * (item.quantity);
-    });
+    }
+    // 狀態處理：購物車有東西
+    else {
+        response.data.carts.forEach(function (item) {
+            let numeralPrice = numeral(item.product.price);
+            let priceStr = numeralPrice.format("$0,0");
+            let subTotalPrice = (item.product.price) * item.quantity;
+            let numeralSubTotalPrice = numeral(subTotalPrice);
+            let subTotalPriceStr = numeralSubTotalPrice.format("$0,0");
+            let cartId = item.id;
+            //處理單身：組字串給 innerHTML
+            let li = `
+                     <tr>
+                         <td>
+                             <div class="cardItem-title">
+                                 <img src="${item.product.images}" alt="">
+                                 <p>${item.product.title}</p>
+                             </div>
+                         </td>
+                         <td>NT${priceStr}</td>
+                         <td>${item.quantity}</td>
+                         <td>NT${subTotalPriceStr}</td>
+                         <td class="discardBtn">
+                             <a href="#shoppingCart" class="material-icons" cart-id="${cartId}">
+                                 clear
+                             </a>
+                         </td>
+                     </tr>`;
+            str += li;
+            //處理總價
+            totalPrice += (item.product.price) * (item.quantity);
+        });
+    }
 
     //處理表尾
     let totalPriceStr = numeral(totalPrice).format("$0,0");
@@ -132,16 +177,7 @@ function renderCartList(response) {
     shoppingCartTable.innerHTML = str;
 }
 
-function getCartList() {
-    axios
-        .get(
-            `${url}/carts`
-        )
-        .then(function (response) {
-            renderCartList(response);
-        });
-}
-getCartList();
+
 
 //2. 新增: 把商品加入購物車
 
@@ -218,14 +254,34 @@ function addCartList(productObj) {
 
 //3. 刪掉整個購物車清單
 let shoppingCartTable = document.querySelector(".shoppingCart-table");
-
+console.log(shoppingCartList);
 shoppingCartTable.addEventListener("click", function (e) {
     if (e.target.getAttribute("class") != "discardAllBtn") {
         console.log("沒點到，刪不掉");
         return;
     }
-    console.log(e.target);
-    deleteAllCartItems();
+    // if (shoppingCartList.carts.length == 0){
+    //     Swal.fire({
+    //         title: "購物車目前空空的喔!",
+    //         text: " ┌|◎o◎|┘",
+    //         icon: "info",
+    //         confirmButtonText: "繼續選購"
+    //     });
+    //     return;
+    // }
+    if (shoppingCartList.carts.length > 0) {
+        console.log(e.target);
+        deleteAllCartItems();
+    } else {
+        Swal.fire({
+            title: "購物車目前空空的喔!",
+            text: " ┌|◎o◎|┘",
+            icon: "info",
+            confirmButtonText: "繼續選購"
+        });
+        return;
+    }
+
 })
 function deleteAllCartItems() {
     axios
@@ -316,6 +372,16 @@ orderInfoForm.addEventListener("click", function (e) {
                 }
             }
         };
+        //檢查購物車有沒有東西
+        if ((shoppingCartList.carts == undefined) || (shoppingCartList.carts.length == 0 || undefined)) {
+            Swal.fire({
+                title: "購物車目前空空的喔!",
+                text: " ┌|◎o◎|┘",
+                icon: "info",
+                confirmButtonText: "繼續選購"
+            });
+            return;
+        }
         postCustomerOrders(data); //訂單要去後台囉！！=========─=≡Σ((( つ•̀ω•́)つ=======>[接] ლ(́◕◞౪◟◕‵ლ)[後台]
     }
 
