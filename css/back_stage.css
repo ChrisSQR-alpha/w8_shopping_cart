@@ -847,3 +847,8 @@ body {
   color: white;
   background-color: #301E5F;
 }
+
+.c3-chart-arc text {
+  fill: #fff;
+  font-size: 13px;
+}

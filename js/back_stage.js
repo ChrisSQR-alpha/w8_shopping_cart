@@ -5,7 +5,6 @@ const url = `https://livejs-api.hexschool.io/api/livejs/v1/admin/${api_path}`;
 
 //1. 向伺服器要求訂單資料並且渲染畫面
 getOrderList();
-
 function getOrderList() {
     axios
         .get(
@@ -17,7 +16,6 @@ function getOrderList() {
             }
         )
         .then(function (response) {
-            console.log(response.data.orders);
             renderOrderList(response);
             renderChartEachClass(calculateDataEachClass(response));
             renderChartEachProduct(calculateDataEachProduct(response));
@@ -97,23 +95,23 @@ function renderOrderList(response) {
 function calculateDataEachClass(response) {
     let classObject = {};
     let allOrdersArray = response.data.orders;
-    // console.log(allOrdersArray);
     allOrdersArray.forEach(function (eachOrder) {
-        // console.log(eachOrder.products);
         let eachOrderProductsArray = eachOrder.products;
         eachOrderProductsArray.forEach(function (eachProduct) {
-            // console.log(eachProduct.category);
             let targetProductCategory = eachProduct.category;
             if (classObject[targetProductCategory] == undefined) {
-                classObject[targetProductCategory] = 1;
+                classObject[targetProductCategory] = eachProduct.quantity;
             } else {
-                classObject[targetProductCategory] += 1;
+                classObject[targetProductCategory] += eachProduct.quantity;
             }
         })
     })
-    // console.log(classObject);
-    let dataEachClassArray = Object.entries(classObject);
-    // console.log(dataEachClassArray);
+    let dataEachClassArray = [];
+    if (Object.entries(classObject).length == 0) {
+        dataEachClassArray = [['尚無訂單', 1]];
+    } else {
+        dataEachClassArray = Object.entries(classObject);
+    }
     return dataEachClassArray;
 }
 // 渲染 Lv1 圖表
@@ -133,49 +131,70 @@ function renderChartEachClass(dataEachClassArray) {
 }
 // 回傳組好的各品項資料
 function calculateDataEachProduct(response) {
-    console.log(response.data.orders);
     let productObject = {};
-    let allOrdersArray = response.data.orders;
-    allOrdersArray.forEach(function (eachOrder) {
-        // console.log(eachOrder.products);
-        let eachOrderProductsArray = eachOrder.products;
-        eachOrderProductsArray.forEach(function (eachProduct) {
-            // console.log(eachProduct.title);
-            let eachProductTitle = eachProduct.title;
-            if (productObject[eachProductTitle] == undefined) {
-                productObject[eachProductTitle] = 1;
-            } else {
-                productObject[eachProductTitle] += 1;
-            }
+    let allOrdersArray = response.data.orders; // 資料來源的 array，要拿去 sor
+    let dataInductionArray = []; //整理過後的 
+    //沒有訂單的狀況
+    if (allOrdersArray.length == 0) {
+        dataInductionArray = [['尚無訂單', 1]];
+    }
+    //有訂單的狀況
+    else {
+        allOrdersArray.forEach(function (eachOrder) {
+            let eachOrderProductsArray = eachOrder.products;
+            eachOrderProductsArray.forEach(function (eachProduct) {
+                let eachProductTitle = eachProduct.title;
+                if (productObject[eachProductTitle] == undefined) {
+                    productObject[eachProductTitle] = eachProduct.quantity;
+                } else {
+                    productObject[eachProductTitle] += eachProduct.quantity;
+                }
+                
+            })
         })
-    })
-    let dataEachProductArray = Object.entries(productObject);
-    dataEachProductArray.sort((anElement, anotherElement) => anotherElement[1] - anElement[1]);
-    console.log(dataEachProductArray);
-    let dataInductionArray = [];
-    let others = 0
-    dataEachProductArray.forEach(function (item, index) {
-        if (index <= 2) {
-            dataInductionArray.push(item);
-        } else {
-            others += item[1];
+        let dataEachProductArray = Object.entries(productObject);
+        dataEachProductArray.sort((anElement, anotherElement) => anotherElement[1] - anElement[1]);
+
+        let others = 0
+
+        //只有前三名以內的狀況
+        if (dataEachProductArray.length <= 3) {
+            dataEachProductArray.forEach(function (item, index) {
+
+                dataInductionArray.push(item);
+            })
         }
-    })
-    dataInductionArray[3] = ['其他', others];
-    console.log(dataInductionArray);
+        //有第四名以上的狀況
+        else{
+            dataEachProductArray.forEach(function (item, index) {
+                if (index <= 2) {
+                    dataInductionArray.push(item);
+                } else {
+                    others += item[1];
+                }
+            }) 
+            
+        }
+        dataInductionArray.push(['其他', others]);
+    }
     return dataInductionArray;
 }
 // 渲染 Lv2 圖表 
 function renderChartEachProduct(dataInductionArray) {
-    // C3.js
+    //C3.js
     let chartEachProduct = c3.generate({
         bindto: '#chartEachProduct', // HTML 元素綁定
         data: {
             type: "pie",
             columns: dataInductionArray,
+            empty: {
+                label: {
+                  text: "No Data"
+                }
+              }
         },
         color: {
-            pattern:["#DACBFF", "#9D7FEA", "#5434A7", "#301E5F"]
+            pattern: ["#DACBFF", "#9D7FEA", "#5434A7", "#301E5F"]
         }
     });
 }
@@ -202,7 +221,6 @@ orderPageTable.addEventListener("click", function (e) {
     if (nodeClass != "orderStatus") {
         return;
     }
-    console.log(dataStatus);
     putOrderStatus(dataId, dataStatus);
 });
 function putOrderStatus(dataId, dataStatus) {
@@ -259,7 +277,6 @@ function deleteThisOrder(dataId) {
             }
         }).
         then(function (response) {
-            console.log("delete success");
             renderOrderList(response);
             renderChartEachClass(calculateDataEachClass(response));
             renderChartEachProduct(calculateDataEachProduct(response));
@@ -296,19 +313,20 @@ orderPageList.addEventListener("click", function (e) {
 })
 function deleteAllOrders() {
     axios.
-          delete(`${url}/orders`,{
-            headers:{
+        delete(`${url}/orders`, {
+            headers: {
                 Authorization: token
             }
-          }).
-          then(function (response){
+        }).
+        then(function (response) {
             renderOrderList(response);
             renderChartEachClass(calculateDataEachClass(response));
             renderChartEachProduct(calculateDataEachProduct(response));
-            console.log(response.data.message);
-            // Swal.fire("訂單已清空！(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧", "", "info");
-          })
-    
+            Swal.fire(response.data.message, "", "info");
+        }).
+        catch(function (error) {
+            Swal.fire(error.response.data.message);
+        });
 }
 
 

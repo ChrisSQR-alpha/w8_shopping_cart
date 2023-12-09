@@ -13,8 +13,7 @@ function getProductList() {
         )
         .then(function (response) {
             productList = response.data.products;
-            //console.log(productList);
-            renderProductList(productList);//
+            renderProductList(productList);
         })
         .catch(function (error) {
             console.log(error.response.message);
@@ -47,15 +46,12 @@ getProductList();
 
 //產品列表篩選功能
 let productSelect = document.querySelector(".productSelect");
-//console.log(productSelect.value);
 productSelect.addEventListener("change", function (e) {
-    console.log(e.target.value);
     //宣告一個 filteredProductArray 陣列儲存篩選過後的商品物件
     let filteredProductArray = [];
     //如果 prductList 內容物件的 category 屬性值，和 e.target.value 一樣
     productList.forEach(function (item) {
         if (item.category == e.target.value) {
-            // console.log(item.category);
             filteredProductArray.push(item);
             renderProductList(filteredProductArray);
         }
@@ -85,7 +81,6 @@ function renderCartList(response) {
     if(shoppingCartList.status == false){
         
     }
-    //console.log(shoppingCartList);
     //處理表頭
     let str = `
               <tr>
@@ -198,10 +193,8 @@ const productWrap = document.querySelector(".productWrap"); //DOM
 let productQuantity = 1;
 productWrap.addEventListener("click", function (e) {
     if (e.target.getAttribute("class") != "addCardBtn") {
-        console.log("沒點到，哈哈");
         return
     }
-    //console.log(e.target.getAttribute("data-id"));
     let productId = e.target.getAttribute("data-id");
     //處理產品數量
     //取得伺服器購物車列表
@@ -210,19 +203,13 @@ productWrap.addEventListener("click", function (e) {
             `${url}/carts`
         )
         .then(function (response) {
-            console.log(response.data.carts);
             let latestCartsArray = response.data.carts;
             productQuantity = 1; //預設就是增加一個產品到購物車
             latestCartsArray.forEach((item) => {
-                //console.log(item.quantity);
-                console.log(item.product.id);
-                console.log(productId);
                 //但如果購物車裡面有相同 id 的產品，就取得它的 quantity
                 if (productId == item.product.id) {
-                    console.log(`購物車原本有這項產品，數量為${item.quantity}個`);
                     //然後就加上 1 個，準備後面的步驟把數量傳到伺服器
                     productQuantity = item.quantity + 1;
-                    console.log(`等一下購物車數量會變成${productQuantity}個`);
                 }
             })
 
@@ -254,23 +241,11 @@ function addCartList(productObj) {
 
 //3. 刪掉整個購物車清單
 let shoppingCartTable = document.querySelector(".shoppingCart-table");
-console.log(shoppingCartList);
 shoppingCartTable.addEventListener("click", function (e) {
     if (e.target.getAttribute("class") != "discardAllBtn") {
-        console.log("沒點到，刪不掉");
         return;
     }
-    // if (shoppingCartList.carts.length == 0){
-    //     Swal.fire({
-    //         title: "購物車目前空空的喔!",
-    //         text: " ┌|◎o◎|┘",
-    //         icon: "info",
-    //         confirmButtonText: "繼續選購"
-    //     });
-    //     return;
-    // }
     if (shoppingCartList.carts.length > 0) {
-        console.log(e.target);
         deleteAllCartItems();
     } else {
         Swal.fire({
@@ -299,10 +274,8 @@ function deleteAllCartItems() {
 //4. 刪除指定的訂單項目
 shoppingCartTable.addEventListener("click", function (e) {
     if (e.target.getAttribute("class") == "discardBtn") {
-        console.log("沒點到，刪不掉2");
         return;
     }
-    console.log(e.target);
     cartId = e.target.getAttribute("cart-id");
     deletCartItem(cartId);
 });
@@ -312,7 +285,6 @@ function deletCartItem(cartId) {
             `${url}/carts/${cartId}`
         )
         .then(function (response) {
-            // console.log(response.data);
             renderCartList(response);
         });
 }
@@ -347,7 +319,6 @@ orderInfoForm.addEventListener("click", function (e) {
 
     //確認每一個欄位都有值
     hasValueArray.forEach(function (item) {
-        console.log(item);
         if (item == false) {
             hasValueAll = false;
         }
@@ -356,9 +327,8 @@ orderInfoForm.addEventListener("click", function (e) {
     //用正規表達式檢查 Email
     isValid = /^(\w+)@([\w.]+)/.test(inputNodeList[2].value);
     if (isValid == false) {
-        dataMessageNodeList[2].innerHTML = "<span>必須包含符號＠</span>";
+        dataMessageNodeList[2].innerHTML = "<span>必須包含符號＠ <br> 例如: example@mail.com</span>";
     }
-    console.log(`isValid: ${isValid}`);
     //如果每一個欄位都有值，且Email 格式正確
     if ((hasValueAll == true) && isValid == true) {
         let data = {
@@ -383,6 +353,20 @@ orderInfoForm.addEventListener("click", function (e) {
             return;
         }
         postCustomerOrders(data); //訂單要去後台囉！！=========─=≡Σ((( つ•̀ω•́)つ=======>[接] ლ(́◕◞౪◟◕‵ლ)[後台]
+    }else if(hasValueAll == false){
+        Swal.fire({
+            title: "客戶資訊尚未填寫 ((((；゜Д゜)))!",
+            text: "",
+            icon: "info",
+            confirmButtonText: "瞭解"
+        });
+    }else if(isValid == false){
+        Swal.fire({
+            title: "Email 格式錯誤 ((((；゜Д゜)))!",
+            text: "",
+            icon: "info",
+            confirmButtonText: "瞭解"
+        });
     }
 
 })
@@ -394,8 +378,6 @@ function postCustomerOrders(data) {
             `${url}/orders`, data
         )
         .then(function (response) {
-            console.log(response);
-            console.log(response.status);
             if (response.status == 200) {
                 Swal.fire({
                     title: "預定成功!",
@@ -408,7 +390,6 @@ function postCustomerOrders(data) {
                 productSelect.value = "全部";
                 getProductList();
             }
-
         });
 }
 
@@ -457,5 +438,4 @@ function renderOrderInfo() {
             </div>
             <input type="button" value="送出預訂資料" class="orderInfo-btn">
     `;
-    console.log(orderInfo);
 }
